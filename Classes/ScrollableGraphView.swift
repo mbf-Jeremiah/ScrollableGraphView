@@ -7,7 +7,7 @@ import UIKit
 // MARK: - ScrollableGraphView
 @IBDesignable
 @objc open class ScrollableGraphView: UIScrollView, UIScrollViewDelegate, ScrollableGraphViewDrawingDelegate {
-    
+    open weak var pointSelectedDelegate: PointSelectedProtocol?
     // MARK: - Public Properties
     // Use these to customise the graph.
     // #################################
