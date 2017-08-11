@@ -819,8 +819,8 @@ import UIKit
             let rangeMin = (shouldAdaptRange) ? self.range.min : self.rangeMin
             let position = calculatePosition(atIndex: point, value: rangeMin)
             
-            label.frame = CGRect(origin: CGPoint(x: position.x - label.frame.width / 2, y: position.y + ref.dataPointLabelTopMargin), size: label.frame.size)
-            
+//            label.frame = CGRect(origin: CGPoint(x: position.x - label.frame.width / 2, y: position.y + ref.dataPointLabelTopMargin), size: label.frame.size)
+            label.frame = CGRect(origin: CGPoint(x: position.x - label.frame.width / 2, y: 0), size: label.frame.size)
             let _ = labelsView.subviews.filter { $0.frame == label.frame }.map { $0.removeFromSuperview() }
             
             labelsView.addSubview(label)

@@ -195,9 +195,10 @@ internal class ReferenceLineDrawingView : UIView {
         switch(self.settings.referenceLinePosition) {
             
         case .left:
-            gaps.append((start: leftLabelStart.x, end: leftLabelEnd.x))
-            self.addSubview(leftLabel)
-            self.labels.append(leftLabel)
+            break
+//            gaps.append((start: leftLabelStart.x, end: leftLabelEnd.x))
+//            self.addSubview(leftLabel)
+//            self.labels.append(leftLabel)
             
         case .right:
             gaps.append((start: rightLabelStart.x, end: rightLabelEnd.x))
