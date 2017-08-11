@@ -1,7 +1,36 @@
 
 import UIKit
 
-open class Plot {
+open class Plot : CustomStringConvertible {
+    
+    var location = CGPoint(x: 0, y: 0)
+    var currentlyAnimatingToPosition = false
+    
+    fileprivate var x: CGFloat {
+        get {
+            return location.x
+        }
+        set {
+            location.x = newValue
+        }
+    }
+    
+    fileprivate var y: CGFloat {
+        get {
+            return location.y
+        }
+        set {
+            location.y = newValue
+        }
+    }
+    
+    init(position: CGPoint = CGPoint.zero) {
+        x = position.x
+        y = position.y
+    }
+    public var description: String{
+              return "POINT: x:\(x) y:\(y)\n"
+        }
     
     // The id for this plot. Used when determining which data to give it in the dataSource
     open var identifier: String!
