@@ -32,6 +32,12 @@ import UIKit
     /// How much space should be between each data point.
     @IBInspectable open var dataPointSpacing: CGFloat = 40
     
+    @IBInspectable open var shouldCustomizeSelection = false;
+    ///Selected index
+    
+    private var selectedIndex:Int = -1;
+    @IBInspectable open var shouldDrawBarLayer: Bool = false
+    
     @IBInspectable var direction_: Int {
         get { return direction.rawValue }
         set {
@@ -89,7 +95,7 @@ import UIKit
     private var zeroYPosition: CGFloat = 0
     
     // Graph Drawing
-   // private var graphPoints = [GraphPoint]()
+    private var graphPoints = [GraphPoint]()
     private var drawingView = UIView()
     private var plots: [Plot] = [Plot]()
     
@@ -159,7 +165,7 @@ import UIKit
     }
     
     private func setup() {
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(showGraphPoints(notification:)), name: NSNotification.Name(rawValue: "graphpoints"), object: nil)
         clipsToBounds = true
         isCurrentlySettingUp = true
         
@@ -195,14 +201,21 @@ import UIKit
         #if TARGET_INTERFACE_BUILDER
             self.offsetWidth = 0
         #else
-            if (direction == .rightToLeft) {
+//            if (direction == .rightToLeft) {
+//                self.offsetWidth = self.contentSize.width - viewportWidth
+//            }
+            var graphSizeExceedsWindow = false
+           if (self.viewportWidth < totalGraphWidth) {
+                graphSizeExceedsWindow = true
+                    }
+                // Otherwise start of all the way to the left.
+            if (direction == .rightToLeft && graphSizeExceedsWindow) {
                 self.offsetWidth = self.contentSize.width - viewportWidth
             }
                 // Otherwise start of all the way to the left.
             else {
                 self.offsetWidth = 0
-            }
-        #endif
+            }        #endif
         
         // Set the scrollview offset.
         self.contentOffset.x = self.offsetWidth
@@ -258,7 +271,12 @@ import UIKit
         // Set the first active points interval. These are the points that are visible when the view loads.
         self.activePointsInterval = initialActivePointsInterval
     }
-    
+    func showGraphPoints(notification: NSNotification) {
+        if let points = notification.userInfo?["graphpoints"] as? [Any] {
+            graphPoints = points as! [GraphPoint]
+            // do something with your image
+        }
+    }
     private func reset() {
         drawingView.removeFromSuperview()
         referenceLineView?.removeFromSuperview()
@@ -480,7 +498,7 @@ import UIKit
     
     // Limitation: Can only be used when reloading the same number of data points!
     public func reload() {
-        reset()
+        
         stopAnimations()
         rangeDidChange()
         updateUI()
@@ -969,12 +987,21 @@ import UIKit
     }
     private func triggerDelegateWith(index: Int) {
         
-       // guard 0 <= index && index <= (labels.count - 1) else { return }
+      //  guard 0 <= index && index <= (labels.count - 1) else { return }
       //  guard 0 <= index && index <= (data.count - 1) else { return }
+        if (shouldCustomizeSelection) {
+            onSelect(selectedIndex: index)
+        }
         guard let pointDelegate = pointSelectedDelegate else { return }
+       // let stringLabel = labelPool.activateLabel(forPointIndex: index).text
+        pointDelegate.pointWasSelectedAt(label: "", value: 0.0, location: graphPoints[index].location)
         
-        pointDelegate.pointWasSelectedAt(label: "", value: 0.0, location: plots[index].location)
+    }
+    func onSelect(selectedIndex:Int) {
+        self.selectedIndex = selectedIndex
         
+        updatePaths()
+        updateUI()
     }
     private func distance(a: CGPoint, b: CGPoint) -> CGFloat {
         let xDist = a.x - b.x
@@ -987,73 +1014,94 @@ import UIKit
     open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
         
-        //make sure touch exists, make sure delegate is set
-        guard let firstTouch = touches.first, let _ = pointSelectedDelegate else { return }
-        let locationOfTouchPoint = firstTouch.location(in: self)
+        if (graphPoints.count == 0) {
+            return
+        }
         
+        let distanceSensitivityFromTouchPoint : CGFloat = dataPointSpacing/2
+        
+        //make sure touch exists, make sure delegate is set
+        guard let firstTouch = touches.first else {return}
+        let locationOfTouchPoint = firstTouch.location(in: self)
         // instead of looping over all points which is inefficent
         // get | --- (touch area) --- |
         // get the upper point and the lower point
         // if it's within the a limit range from either the upper or bottom point then select that point.
-        let leftDataPointIndex = Int(floor((locationOfTouchPoint.x - 50) / 80))
+        let leftDataPointIndex = Int(floor((locationOfTouchPoint.x - leftmostPointPadding) / dataPointSpacing))
         let rightDataPointIndex = leftDataPointIndex + 1
-        let lastIndexInGraphPoints = plots.count - 1
+        let lastIndexInGraphPoints = graphPoints.count - 1
         
         // user clicks left of left most point
         if leftDataPointIndex < 0 {
-            
             // right point only
-            let rightPoint = plots[rightDataPointIndex].location
-            
-          
-                // right point only
-                let distanceBetweenUpperPointAndTouch = distance(a: rightPoint, b: locationOfTouchPoint)
-                if distanceBetweenUpperPointAndTouch < distanceSensitivityFromTouchPoint {
-                    triggerDelegateWith(index: rightDataPointIndex)
+            let leftMostPoint = graphPoints[0].location
+            if shouldDrawBarLayer {
+                let barWidthToLeftOfX = leftMostPoint.x - distanceSensitivityFromTouchPoint
+                if locationOfTouchPoint.y > leftMostPoint.y &&
+                    barWidthToLeftOfX < locationOfTouchPoint.x {
+                    triggerDelegateWith(index: 0)
                 }
+            } else {
+                // right point only
+                let distanceBetweenUpperPointAndTouch = distance(a: leftMostPoint, b: locationOfTouchPoint)
+                if distanceBetweenUpperPointAndTouch < distanceSensitivityFromTouchPoint {
+                    triggerDelegateWith(index: 0)
+                }
+            }
             
             // user clicks right of last point
-         else if rightDataPointIndex > lastIndexInGraphPoints {
-            
+        } else if rightDataPointIndex > lastIndexInGraphPoints {
             // left point only
-            let leftPoint = plots[leftDataPointIndex].location
+            let rightMostPoint = graphPoints[graphPoints.count - 1].location
             
-           
-                let distanceBetweenLowerPointAndTouch = distance(a: leftPoint, b: locationOfTouchPoint)
-                
+            if shouldDrawBarLayer {
+                let barWidthToRightOfX = rightMostPoint.x + distanceSensitivityFromTouchPoint
+                if locationOfTouchPoint.y > rightMostPoint.y &&
+                    barWidthToRightOfX > locationOfTouchPoint.x {
+                    triggerDelegateWith(index: (graphPoints.count - 1))
+                }
+            } else {
+                let distanceBetweenLowerPointAndTouch = distance(a: rightMostPoint, b: locationOfTouchPoint)
                 if distanceBetweenLowerPointAndTouch < distanceSensitivityFromTouchPoint {
                     triggerDelegateWith(index: leftDataPointIndex)
                 }
             }
             
             // user clicks neither exception case
-        else {
+        } else {
             // left point
-            let leftPoint = plots[leftDataPointIndex].location
-            
+            let leftPoint = graphPoints[leftDataPointIndex].location
             // right point
-            let rightPoint = plots[rightDataPointIndex].location
-            
+            let rightPoint = graphPoints[rightDataPointIndex].location
             // hit detection should check the left and the right bar if user tapped there.
-                    
+            if shouldDrawBarLayer {
+                // check if the left bar was tapped
+                let barWidthToRightOfX = leftPoint.x + distanceSensitivityFromTouchPoint
+                if locationOfTouchPoint.y > leftPoint.y &&
+                    barWidthToRightOfX > locationOfTouchPoint.x {
+                    triggerDelegateWith(index: leftDataPointIndex)
+                }
+                
+                // check if the right bar was tapped
+                let barWidthToLeftOfX = rightPoint.x - distanceSensitivityFromTouchPoint
+                if locationOfTouchPoint.y > rightPoint.y &&
+                    barWidthToLeftOfX < locationOfTouchPoint.x {
+                    triggerDelegateWith(index: rightDataPointIndex)
+                }
+            } else {
                 let distanceBetweenLeftPointAndTouch = distance(a: leftPoint, b: locationOfTouchPoint)
                 let distanceBetweenRightPointAndTouch = distance(a: rightPoint, b: locationOfTouchPoint)
                 
                 // user pressed closer to the right point
                 if distanceBetweenRightPointAndTouch < distanceSensitivityFromTouchPoint {
                     triggerDelegateWith(index: rightDataPointIndex)
-                    
                     // user pressed closer to the left point
                 } else if distanceBetweenLeftPointAndTouch < distanceSensitivityFromTouchPoint {
                     triggerDelegateWith(index: leftDataPointIndex)
-                    
                 }
-            
+            }
         }
     }
-    
-    
-}
 }
 // MARK: - ScrollableGraphView Settings Enums
 // ##########################################

@@ -184,6 +184,11 @@ open class Plot : CustomStringConvertible {
             let point = GraphPoint(position: position)
             graphPoints.append(point)
         }
+        if !graphPoints.isEmpty
+        {
+            let pointsDict:[String: [Any]] = ["graphpoints": graphPoints]
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "graphpoints"), object: nil, userInfo: pointsDict)
+        }
     }
     
     // When active interval changes, need to set the position for any NEWLY ACTIVATED points, otherwise
