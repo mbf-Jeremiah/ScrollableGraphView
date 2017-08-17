@@ -990,7 +990,7 @@ import UIKit
     private func triggerDelegateWith(index: Int) {
         
       //  guard 0 <= index && index <= (labels.count - 1) else { return }
-      //  guard 0 <= index && index <= (data.count - 1) else { return }
+       guard 0 <= index && index <= (data.count - 1) else { return }
         if (shouldCustomizeSelection) {
             onSelect(selectedIndex: index)
         }
