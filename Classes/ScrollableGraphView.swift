@@ -72,6 +72,8 @@ import UIKit
     
     // Reference Line Settings
     // #######################
+    //Show values in the label
+    @IBInspectable open var data = [Double]()
     
     var referenceLines: ReferenceLines? = nil
     
@@ -994,7 +996,7 @@ import UIKit
         }
         guard let pointDelegate = pointSelectedDelegate else { return }
        // let stringLabel = labelPool.activateLabel(forPointIndex: index).text
-        pointDelegate.pointWasSelectedAt(label: "", value: 0.0, location: graphPoints[index].location)
+        pointDelegate.pointWasSelectedAt(label: "", value: data[index], location: graphPoints[index].location)
         
     }
     func onSelect(selectedIndex:Int) {

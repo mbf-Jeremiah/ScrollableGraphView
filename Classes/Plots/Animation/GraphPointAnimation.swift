@@ -72,7 +72,9 @@ internal class GraphPointAnimation : Equatable {
         return lhs.animationKey == rhs.animationKey
     }
 }
-
+    func updatePath(selectedIndex:Int) {
+    fatalError("updatePath needs to be implemented by the subclass")
+   }
 // Simplified easing functions from: http://www.joshondesign.com/2013/03/01/improvedEasingEquations
 internal struct Easings {
     
