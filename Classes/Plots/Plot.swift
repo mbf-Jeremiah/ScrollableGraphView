@@ -5,6 +5,7 @@ open class Plot : CustomStringConvertible {
     
     var location = CGPoint(x: 0, y: 0)
     var currentlyAnimatingToPosition = false
+    var scrollGraphView: ScrollableGraphView = ScrollableGraphView()
     
     fileprivate var x: CGFloat {
         get {
@@ -233,6 +234,10 @@ open class Plot : CustomStringConvertible {
     internal func animatePlotPointPositions(forPoints pointsToAnimate: CountableRange<Int>, withData data: [Double], withDelay delay: Double) {
         // For any visible points, kickoff the animation to their new position after the axis' min/max has changed.
         var dataIndex = 0
+        if scrollGraphView.data.count == 0
+        {
+            graphPoints = []
+        }
         for pointIndex in pointsToAnimate {
             let newPosition = graphViewDrawingDelegate.calculatePosition(atIndex: pointIndex, value: data[dataIndex])
             let point = graphPoints[pointIndex]
