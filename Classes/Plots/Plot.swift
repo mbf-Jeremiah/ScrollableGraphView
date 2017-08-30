@@ -32,7 +32,13 @@ open class Plot : CustomStringConvertible {
     public var description: String{
               return "POINT: x:\(x) y:\(y)\n"
         }
-    
+      public func checkCountIsEmpty(count :Int)
+      {
+        if count == 0
+        {
+            graphPoints = []
+        }
+    }
     // The id for this plot. Used when determining which data to give it in the dataSource
     open var identifier: String!
     

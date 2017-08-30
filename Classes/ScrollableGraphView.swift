@@ -4,10 +4,12 @@ import UIKit
 @objc public protocol PointSelectedProtocol {
     func pointWasSelectedAt(label:String, value:Double, location: CGPoint)
 }
+
 // MARK: - ScrollableGraphView
 @IBDesignable
 @objc open class ScrollableGraphView: UIScrollView, UIScrollViewDelegate, ScrollableGraphViewDrawingDelegate {
     open weak var pointSelectedDelegate: PointSelectedProtocol?
+   
     // MARK: - Public Properties
     // Use these to customise the graph.
     // #################################
@@ -500,10 +502,6 @@ import UIKit
     
     // Limitation: Can only be used when reloading the same number of data points!
     public func reload() {
-        if data.count == 0
-        {
-            graphPoints = []
-        }
         stopAnimations()
         rangeDidChange()
         updateUI()
