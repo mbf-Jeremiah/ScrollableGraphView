@@ -500,7 +500,10 @@ import UIKit
     
     // Limitation: Can only be used when reloading the same number of data points!
     public func reload() {
-        
+        if data.count == 0
+        {
+            graphPoints = []
+        }
         stopAnimations()
         rangeDidChange()
         updateUI()
